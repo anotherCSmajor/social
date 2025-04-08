@@ -15,9 +15,15 @@ app.use(express.urlencoded({ extended: false }))
 app.use(express.json())
 app.use(express.static('./public'))
 
-mongoose.connect("mongodb://localhost:27017/socialDB",)
+/* mongoose.connect("mongodb://localhost:27017/socialDB",)
 .then(()=>{console.log('connected to mongodb ')})
-.catch(err =>{console.log('mongo db conection error',err)});
+.catch(err =>{console.log('mongo db conection error',err)}); */
+
+mongoose.connect(process.env.MONGODB_URI, { useNewUrlParser: true, useUnifiedTopology: true })
+  .then(() => console.log("MongoDB connected"))
+  .catch((err) => console.error("MongoDB connection error:", err));
+
+
             //fuking tweets schema 
 
             const tweetSchema = new mongoose.Schema({
