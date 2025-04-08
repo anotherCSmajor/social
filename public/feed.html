@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>feed</title>
+</head>
+<body>
+    <div id="feedcontainer">
+
+        <form action="/v1/post" method="POST">
+            <textarea name="PostContent" placeholder="What's on your mind?"></textarea>
+            <button type="submit">Post</button>
+          </form>
+          <h3><button type="submit"  ><a href="/dashboard">home</a></button></h3>
+    </div>
+    
+</body>
+<script>
+    fetch("/feed",)
+    .then(Response=>Response.json())
+    .then(data=>{
+        const container = document.getElementById('feedcontainer')
+        data.forEach(tweet => {
+            const tweet1 = document.createElement('div');
+
+            tweet1.innerHTML = `
+            <p><strong>${tweet.author.username}:</strong> ${tweet.PostContent}</p>
+            <p><em>Posted on:</em> ${new Date(tweet.createdAt).toLocaleString()}</p>
+            <hr>
+          `;
+            container.appendChild(tweet1)
+            
+        });
+        
+    }).catch(err => {
+        console.error('Error loading feed:', err); // 7️⃣ Error handling
+      });
+</script>
+</html>
