@@ -4,37 +4,330 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>feed</title>
+    <style>/* Modern, fun, bluish college-themed design */
+
+      body {
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        background: #f0f4f8;
+        margin: 0;
+        padding: 0;
+        color: #333;
+      }
+      
+      h1 {
+        text-align: center;
+        color: #004080;
+        margin-top: 1rem;
+      }
+      
+      h4 {
+        text-align: center;
+        color: #666;
+        margin-bottom: 2rem;
+      }
+      
+      #feedcontainer {
+        max-width: 700px;
+        margin: auto;
+        background: #ffffff;
+        padding: 1rem;
+        border-radius: 10px;
+        box-shadow: 0 0 10px rgba(0, 0, 50, 0.1);
+      }
+      
+      form {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+        margin-bottom: 2rem;
+      }
+      
+      textarea {
+        resize: vertical;
+        min-height: 80px;
+        padding: 0.75rem;
+        font-size: 1rem;
+        border-radius: 8px;
+        border: 1px solid #ccc;
+        outline: none;
+      }
+      
+      button {
+        background-color: #005ecb;
+        color: white;
+        padding: 0.6rem 1.2rem;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        transition: background 0.3s ease;
+      }
+      
+      button:hover {
+        background-color: #004bb5;
+      }
+      
+      .vote-btn {
+        margin-right: 0.5rem;
+        margin-top: 0.5rem;
+        padding: 0.4rem 0.8rem;
+        font-size: 0.9rem;
+        background-color: #e6f0ff;
+        color: #004080;
+        border: 1px solid #b3d1ff;
+        border-radius: 6px;
+        transition: all 0.2s ease;
+      }
+      
+      .vote-btn:hover {
+        background-color: #cce0ff;
+      }
+      
+      .commentbtn {
+        margin-top: 0.5rem;
+        background-color: #00b894;
+        color: white;
+      }
+      
+      .commentbtn:hover {
+        background-color: #009f7a;
+      }
+      
+      input[type="text"] {
+        padding: 0.5rem;
+        border-radius: 6px;
+        border: 1px solid #ccc;
+        width: 100%;
+        margin-bottom: 0.5rem;
+      }
+      
+      div[data-id] {
+        border-bottom: 1px solid #ddd;
+        padding: 1rem 0;
+      }
+      
+      hr {
+        border: none;
+        height: 1px;
+        background-color: #ddd;
+        margin: 1rem 0;
+      }
+      
+      @media (max-width: 600px) {
+        #feedcontainer {
+          margin: 1rem;
+          padding: 1rem;
+        }
+      
+        button, .vote-btn, .commentbtn {
+          width: 100%;
+          margin-top: 0.5rem;
+        }
+      
+        textarea {
+          width: 100%;
+        }
+      }
+      </style>
 </head>
 <body>
-    <div id="feedcontainer">
+    <h1>Feed</h1>
+    <h4>refresh for latest post </h4>
 
+    <div id="feedcontainer">
         <form action="/v1/post" method="POST">
             <textarea name="PostContent" placeholder="What's on your mind?"></textarea>
             <button type="submit">Post</button>
-          </form>
-          <h3><button type="submit"  ><a href="/dashboard">home</a></button></h3>
+        </form>
+        <h3><button type="submit"><a href="/dashboard">home</a></button></h3>
     </div>
-    
 </body>
-<script>
-    fetch("/feed",)
-    .then(Response=>Response.json())
-    .then(data=>{
-        const container = document.getElementById('feedcontainer')
-        data.forEach(tweet => {
-            const tweet1 = document.createElement('div');
 
-            tweet1.innerHTML = `
-            <p><strong>${tweet.author.username}:</strong> ${tweet.PostContent}</p>
-            <p><em>Posted on:</em> ${new Date(tweet.createdAt).toLocaleString()}</p>
-            <hr>
-          `;
-            container.appendChild(tweet1)
-            
-        });
-        
-    }).catch(err => {
-        console.error('Error loading feed:', err); // 7️⃣ Error handling
+
+
+<script>
+    fetch("/feed")
+        .then(response => response.json())
+        .then(data => {
+            const container = document.getElementById('feedcontainer');
+
+            data.forEach(tweet => {
+                const tweet1 = document.createElement('div');
+
+               
+                tweet1.innerHTML = `
+                    <div data-id="${tweet._id}"
+                     onclick="location.href='posts.html?tweetId=${tweet._id}'" 
+                     style="cursor:pointer;"
+                     title="ckick to see comment">
+                        
+                        <p><strong>${tweet.author.username}:</strong> ${tweet.PostContent}</p>
+                    <p><em>Posted on:</em> ${new Date(tweet.createdAt).toLocaleString()}</p>
+                    </div>
+                       <button 
+                          type="button" 
+                          class="vote-btn count" 
+                          id="votecount${tweet._id}"
+                           >
+                        0
+                        </button>
+                     <button 
+                          type="button" 
+                          class="vote-btn upvote" 
+                          id="upbtn${tweet._id}"
+                           >
+                         upvote👍
+                        </button>
+                      
+                     <button 
+                          type="button" 
+                          class="vote-btn downvote"
+                          id="dbtn${tweet._id}"
+                          >
+                          downvote👎
+                        </button>
+                    
+                   
+
+                    <form action="/comment" method="post">
+                        <input type="text" name="commentContent" placeholder="write your comment here">
+                        <input type="hidden" name="ParentPost" value="${tweet._id}">
+                        <button type="submit" class="commentbtn" 
+                        
+                        >click to comment</button>
+                    </form>
+                    <hr>
+                `;
+                  container.appendChild(tweet1);
+                    
+   
+                
+                const votecount= tweet1.querySelector(`#votecount${tweet._id}`);
+                const upvote = tweet1.querySelector(`#upbtn${tweet._id}`);
+                const downvote = tweet1.querySelector(`#dbtn${tweet._id}`);
+
+                    fetch(`/get/vote/value?postid=${tweet._id}`)
+                    .then(response=>response.json())
+                    .then(data=>{
+                      if (data.value==1) {
+                        upvote.style.color="green"
+                          downvote.style.color="black"
+                      }
+                      else   if (data.value==0) {
+                        upvote.style.color="black"
+                          downvote.style.color="black"
+                      }
+                      else   if (data.value==-1) {
+                        upvote.style.color="black"
+                          downvote.style.color="red"
+                      }
+                      console.log(data.value,"data.value")
+                    })
+                    .catch(error=>{
+                      console.log(error,"the error of ")
+                    })
+                    fetch(`/vote/count?postid=${tweet._id}`).then(response=>response.json())
+                    .then(data=>{
+                        votecount.textContent=`${data.totalvote}`
+                    })
+                   
+
+upvote.addEventListener("click", () => {
+  fetch(`/get/vote/value?postid=${tweet._id}`)
+    .then(response => response.json())
+    .then(data => {
+      let newValue;
+      if (data.value == 1) {
+        // Already upvoted → cancel vote
+        newValue = 0;
+        upvote.style.color="black"
+        downvote.style.color="black"
+      }
+      else if(data.value==-1){
+        newValue=1;
+        upvote.style.color="green"
+        downvote.style.color="black"
+      }
+      else {
+        // Not upvoted yet → set to upvote
+        newValue = 1;
+        upvote.style.color="green"
+        downvote.style.color="black"
+      }
+
+      return fetch(`/v1/vote?value=${newValue}&postid=${tweet._id}`, {
+        method: "POST"
       });
+    })
+   
+    })
+
+    downvote.addEventListener("click", () => {
+  fetch(`/get/vote/value?postid=${tweet._id}`)
+    .then(response => response.json())
+    .then(data => {
+      let newValue;
+      if (data.value == 1) {
+        // Already upvoted → cancel vote
+        newValue = -1;
+        upvote.style.color="black"
+        downvote.style.color="red"
+      }
+      else if(data.value==-1){
+        newValue=0;
+        upvote.style.color="black"
+        downvote.style.color="black"
+      }
+      else {
+        // Not upvoted yet → set to upvote
+        newValue = -1;
+        upvote.style.color="black"
+        downvote.style.color="red"
+      }
+
+      return fetch(`/v1/vote?value=${newValue}&postid=${tweet._id}`, {
+        method: "POST"
+      });
+    })
+  })
+   
+           /*          fetch(`/get/vote/value?postid=${tweet._id}`).then(response=>response.json())
+                        .then(data=>{
+                            console.log("data.value for downvote ",data.value)
+                          if (data.value===0||data.value===1) {
+                            fetch(`/v1/vote?value=-1&postid=${tweet._id}`,{method:"POST",})
+                            downvote.style.color="red";
+                            upvote.style.color="black";
+                            
+                          } 
+                          else{
+                            fetch(`/v1/vote?value=0&postid=${tweet._id}`,{ method:"POST",})
+                            downvote.style.color="black";
+                          }
+                        })
+
+
+                      fetch(`/get/vote/value?postid=${tweet._id}`).then(response=>response.json())
+                        .then(data=>{
+                            console.log("data.value for upvote ",data.value)
+                          if (data.value===0||data.value===-1) {
+                            fetch(`/v1/vote?value=1&postid=${tweet._id}`,{method:"POST",})
+                            upvote.style.color="green";
+                            downvote.style.color="black";
+                          } 
+                          else{
+                            fetch(`/v1/vote?value=0&postid=${tweet._id}`,{ method:"POST",})
+                            upvote.style.color="black";
+                           
+                }}) */
+                // Find the button inside THIS tweet block
+               
+                
+                
+                    
+                
+                       
+                });
+            });
+        ;
 </script>
 </html>

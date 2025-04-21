@@ -4,13 +4,284 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>posts</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        background-color: #f4f7fa;
+        color: #333;
+        margin: 0;
+        padding: 1rem;
+      }
+  
+      #mainwrapper {
+        max-width: 700px;
+        margin: 0 auto;
+      }
+  
+      h1, h2, h3, h4 {
+        color: #2c3e50;
+      }
+  
+      .post, .comment1 {
+        background-color: #ffffff;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        padding: 1rem;
+        margin-bottom: 1rem;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+      }
+  
+      form {
+        margin-top: 1rem;
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+      }
+  
+      input[type="text"] {
+        padding: 10px;
+        border: 1px solid #ccc;
+        border-radius: 6px;
+        font-size: 1rem;
+      }
+  
+      button {
+        padding: 10px;
+        font-size: 1rem;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        background-color: #3498db;
+        color: white;
+        transition: background 0.3s ease;
+      }
+  
+      button:hover {
+        background-color: #2980b9;
+      }
+  
+      .vote-btn {
+        margin-right: 8px;
+        background-color: #ecf0f1;
+        color: #2c3e50;
+        font-size: 0.9rem;
+        border: 1px solid #ccc;
+      }
+  
+      .vote-btn:hover {
+        background-color: #d0e6f7;
+      }
+  
+      #commentButtonPostpage {
+        background-color: #2ecc71;
+      }
+  
+      #commentButtonPostpage:hover {
+        background-color: #27ae60;
+      }
+  
+      @media (max-width: 600px) {
+        body {
+          padding: 0.5rem;
+        }
+  
+        .post, .comment1 {
+          padding: 0.75rem;
+        }
+  
+        input[type="text"], button {
+          font-size: 0.9rem;
+        }
+      }
+    </style>
 </head>
 <body>
-    <H1>post here </H1>
-    <form action="/v1/post" method="post">
-        <input type="text" name="PostContent" id="posts" placeholder="write your posts here">
-       <!--  <input type="text" name="author"> -->
-        <button type="submit">Click to post</button>
-    </form>
+    <script>
+        const params = new URLSearchParams(window.location.search);
+        const tweetId = params.get("tweetId");
+        const div1 = document.createElement("div");
+        div1.innerHTML =`${tweetId}`
+
+        const mainwrapper = document.createElement("div")
+                    mainwrapper.id="mainwrapper"
+        //document.body.append(div1); 
+fetch("/feed",)
+        .then(response=>response.json())
+        .then( data =>{
+            const tweet = data.find(tweet => tweet._id === tweetId);
+           
+            const singlepost = document.createElement("div")
+            singlepost.innerHTML=`
+             <p><strong>${tweet.author.username}:</strong> ${tweet.PostContent}</p>
+                    <p><em>Posted on:</em> ${new Date(tweet.createdAt).toLocaleString()}</p>
+
+             <button 
+                          type="button" 
+                          class="vote-btn count" 
+                          id="votecount${tweet._id}"
+                           >
+                        0
+                        </button>
+                     <button 
+                          type="button" 
+                          class="vote-btn upvote" 
+                          id="upbtn${tweet._id}"
+                           >
+                         upvote👍
+                        </button>
+                      
+                     <button 
+                          type="button" 
+                          class="vote-btn downvote"
+                          id="dbtn${tweet._id}"
+                          >
+                          downvote👎
+                        </button>
+                    <hr><hr>
+
+                  <form action="/comment" method="post" id="commentsubmitform">
+                        <input type="text" name="commentContent" placeholder="write your comment here">
+                        <input type="hidden" name="ParentPost" value="${tweet._id}">
+                         <button type="submit" class="commentbtn" id="commentButtonPostpage" >>click to comment<</button>
+                    
+                    </form>   
+                    `
+                      
+                const votecount= singlepost.querySelector(`#votecount${tweet._id}`);
+                const upvote = singlepost.querySelector(`#upbtn${tweet._id}`);
+                const downvote = singlepost.querySelector(`#dbtn${tweet._id}`);
+
+                    fetch(`/get/vote/value?postid=${tweet._id}`)
+                    .then(response=>response.json())
+                    .then(data=>{
+                      if (data.value==1) {
+                        upvote.style.color="green"
+                          downvote.style.color="black"
+                      }
+                      else   if (data.value==0) {
+                        upvote.style.color="black"
+                          downvote.style.color="black"
+                      }
+                      else   if (data.value==-1) {
+                        upvote.style.color="black"
+                          downvote.style.color="red"
+                      }
+                      console.log(data.value,"data.value")
+                    })
+                    .catch(error=>{
+                      console.log(error,"the error of ")
+                    })
+                    fetch(`/vote/count?postid=${tweet._id}`).then(response=>response.json())
+                    .then(data=>{
+                        votecount.textContent=`${data.totalvote}`
+                    })
+                   
+
+upvote.addEventListener("click", () => {
+  fetch(`/get/vote/value?postid=${tweet._id}`)
+    .then(response => response.json())
+    .then(data => {
+      let newValue;
+      if (data.value == 1) {
+        // Already upvoted → cancel vote
+        newValue = 0;
+        upvote.style.color="black"
+        downvote.style.color="black"
+      }
+      else if(data.value==-1){
+        newValue=1;
+        upvote.style.color="green"
+        downvote.style.color="black"
+      }
+      else {
+        // Not upvoted yet → set to upvote
+        newValue = 1;
+        upvote.style.color="green"
+        downvote.style.color="black"
+      }
+
+      return fetch(`/v1/vote?value=${newValue}&postid=${tweet._id}`, {
+        method: "POST"
+      });
+    })
+   
+    })
+
+    downvote.addEventListener("click", () => {
+  fetch(`/get/vote/value?postid=${tweet._id}`)
+    .then(response => response.json())
+    .then(data => {
+      let newValue;
+      if (data.value == 1) {
+        // Already upvoted → cancel vote
+        newValue = -1;
+        upvote.style.color="black"
+        downvote.style.color="red"
+      }
+      else if(data.value==-1){
+        newValue=0;
+        upvote.style.color="black"
+        downvote.style.color="black"
+      }
+      else {
+        // Not upvoted yet → set to upvote
+        newValue = -1;
+        upvote.style.color="black"
+        downvote.style.color="red"
+      }
+
+      return fetch(`/v1/vote?value=${newValue}&postid=${tweet._id}`, {
+        method: "POST"
+      });
+    })
+  })
+
+                    
+                     mainwrapper.prepend(singlepost);
+
+        })
+      
+
+        
+                fetch(`/post/comment/${tweetId}`)
+                        .then(response => response.json())
+                        .then(async comments => {
+                            const commentWrapper = document.createElement("div");
+                            
+                            const derollcoment =document.createElement("button")
+                            derollcoment.type="button"
+                            derollcoment.title="go back"
+                            derollcoment.textContent="X"
+                            derollcoment.addEventListener("click",()=>{
+                               window.location.href="feed.html"
+                            })
+                           commentWrapper.appendChild(derollcoment)
+                            comments.forEach( comment => {
+                                const comment1 = document.createElement("div");
+                                comment1.className = "comment1";
+
+                                
+
+                                comment1.innerHTML = `
+                                    <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>${comment.author.username}:</strong> ${comment.commentContent}</p>
+                                    <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<em>commented on:</em> ${new Date(comment.createdAt).toLocaleString()}</p>
+                                `;
+                               
+                               commentWrapper.appendChild(comment1)
+                                
+                                
+                                
+                            });
+
+                          
+                        //  mainwrapper.appendChild(singlepost);
+                         mainwrapper.appendChild(commentWrapper); 
+                            document.body.appendChild(mainwrapper)
+                            ;})
+
+                           
+        
+            </script>
+               
 </body>
-</html>
+</html> 
